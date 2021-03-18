@@ -2,7 +2,7 @@
 //MSE 2202
 //Western Engineering base code
 //2020 05 13 E J Porter
-
+//Modified by: Azhar Rasiwala, 3/18/2021
 
 /*
   esp32                                           MSE-DuinoV2
@@ -91,8 +91,6 @@ uint8_t CR1_ui8IRDatum;
 uint8_t CR1_ui8WheelSpeed;
 uint8_t CR1_ui8LeftWheelSpeed;
 uint8_t CR1_ui8RightWheelSpeed;
-uint8_t CR1_ui8WheelSpeedMod = 8;
-uint8_t CR1_ui8RightWheelSpeedMod;
 
 uint32_t CR1_u32Now;
 uint32_t CR1_u32Last;
@@ -108,6 +106,8 @@ unsigned long CR1_ulMainTimerNow;
 unsigned long CR1_ulMotorTimerPrevious;
 unsigned long CR1_ulMotorTimerNow;
 unsigned char ucMotorStateIndex = 0;
+//Inner switch index
+unsigned char ucMotorStateIndex2 = 0;
 
 unsigned long CR1_ulHeartbeatTimerPrevious;
 unsigned long CR1_ulHeartbeatTimerNow;
@@ -118,12 +118,12 @@ boolean btToggle = true;
 int iButtonState;
 int iLastButtonState = HIGH;
 
-//Track # of ticks to beacon
-unsigned int trackDistance;
-//If beacon is hit change things
-boolean beaconHit = false;
-//Inner switch index
-int ucMotorStateIndex2;
+///////////////////////////////////////////////////////////////////////////////////////////////FOR QUICK AND EASY MOTOR ADJUSTMENT//////////////////////////////////////////////////
+uint8_t leftWheelSpeedMod = 8;
+uint8_t rightWheelSpeedMod = 8;
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//If beacon is hit change state 
+oolean beaconHit = false;
 
 
 //Servo
@@ -262,17 +262,17 @@ void loop()
               // Serial.print("\n");
               switch (ucMotorStateIndex)
               {
-                //First leg
+                //Head Towards Obstacle 
                 case 0:
                   {
                     ENC_SetDistance(240, 240);
                     ucMotorState = 1;
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +  CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
+                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed + leftWheelSpeedMod;
+                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed + rightWheelSpeedMod;
                     ucMotorStateIndex = 1;
                     break;
                   }
-                //stop
+                  //stop
                 case 1:
                   {
                     if (ENC_ISMotorRunning() == 0)
@@ -282,231 +282,6 @@ void loop()
                     }
                     break;
                   }
-
-                //Turn to parallel with obstacle
-                case 2:
-                  {
-                    ENC_SetDistance(35, 35); //35 ticks is a perfect 90 degree turn //note 75 ticks is 180 degrees
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +  CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorState = 3;
-                    ucMotorStateIndex = 3;
-                    break;
-                  }
-
-                //Stop
-                case 3:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorState = 5;
-                      ucMotorStateIndex = 4;
-                    }
-                    break;
-                  }
-
-                //Head along obstacle
-                case 4:
-                  {
-                    ENC_SetDistance(120, 120); //100 ticks means it moves forward 37cm
-                    ucMotorState = 1;
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +     CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorStateIndex = 5;
-                    break;
-                  }
-                //Stop after end of obstacle
-                case 5:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorStateIndex = 6;
-                      ucMotorState = 5;
-                    }
-                    break;
-                  }
-                //turn 270
-                case 6:
-                  {
-                    ENC_SetDistance(90, 90); //35 ticks is a perfect 90 degree turn //note 75 ticks is 180 degrees
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +     CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorState = 3;
-                    ucMotorStateIndex = 7;
-                    break;
-                  }
-                //Stop
-                case 7:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorState = 5;
-                      ucMotorStateIndex = 8;
-                    }
-                    break;
-                  }
-                //Head along obstacle towards beacon
-                case 8:
-                  {
-                    ENC_SetDistance(380, 380); //100 ticks means it moves forward 37cm
-                    ucMotorState = 1;
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed + 8;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorStateIndex = 9;
-                    break;
-                  }
-                //Stop after end of obstacle
-                case 9:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorStateIndex = 10;
-                      ucMotorState = 5;
-                    }
-                    break;
-                  }
-                //turn 270
-                case 10:
-                  {
-                    ENC_SetDistance(90, 90); //35 ticks is a perfect 90 degree turn //note 75 ticks is 180 degrees
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +     CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorState = 3;
-                    ucMotorStateIndex = 11;
-                    break;
-                  }
-                //Stop
-                case 11:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorState = 5;
-                      ucMotorStateIndex = 12;
-                    }
-                    break;
-                  }
-
-                //Head along obstacle
-                case 12:
-                  {
-                    ENC_SetDistance(110, 110); //100 ticks means it moves forward 37cm
-                    ucMotorState = 1;
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +     CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorStateIndex = 13;
-                    break;
-                  }
-                //stop
-                case 13:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorState = 5;
-                      ucMotorStateIndex = 16;
-                    }
-                    break;
-                  }
-                //Turn towards beacon
-                case 14:
-                  {
-                    ENC_SetDistance(35, 35); //35 ticks is a perfect 90 degree turn //note 75 ticks is 180 degrees
-                    CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed  +     CR1_ui8WheelSpeedMod;
-                    CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                    ucMotorState = 3;
-                    ucMotorStateIndex = 15;
-                    break;
-                  }
-                //stop
-                case 15:
-                  {
-                    if (ENC_ISMotorRunning() == 0)
-                    {
-                      ucMotorState = 5;
-                      ucMotorStateIndex = 16;
-                    }
-                    break;
-                  }
-                case 16:
-                  {
-                    if (CR1_ui8IRDatum == 0x55 && beaconHit == false)
-                    {
-                      ucMotorStateIndex2 = 1;
-                    }
-                    else if (CR1_ui8IRDatum == 0x41 && beaconHit == false)
-                    {
-                      ucMotorStateIndex2 = 2;
-                      beaconHit = true;
-                    }
-                    else
-                    {
-                      if (beaconHit == false)
-                      {
-                        ucMotorStateIndex2 = 0;
-                      }
-                    }
-                    switch (ucMotorStateIndex2)
-                    {
-                      //Scan for beacon
-                      case 0:
-                        {
-
-                          ENC_SetDistance(1, 1);
-                          ucMotorState = 2;
-                          CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed;
-                          CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-
-                          break;
-                        }
-
-                      //Head towards beacon
-                      case 1:
-                        {
-                          ENC_SetDistance(10, 10);
-                          trackDistance += 1; // Must match set distance #
-                          ucMotorState = 1;
-                          CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed +8;
-                          CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                          break;
-                        }
-
-                      //Stop at beacon
-                      case 2:
-                        {
-                          ucMotorState = 0;
-                          ucMotorStateIndex2 = 3;
-                          break;
-                        }
-                      //Move Backwards
-                      case 3:
-                        {
-                          ENC_SetDistance(280, 280);
-                          ucMotorState = 4;
-                          CR1_ui8LeftWheelSpeed = CR1_ui8WheelSpeed+8;
-                          CR1_ui8RightWheelSpeed = CR1_ui8WheelSpeed;
-                          ucMotorStateIndex2 = 4;
-
-                          break;
-                        }
-                      //Stop Halfway
-                      case 4:
-                        {
-                          if (ENC_ISMotorRunning() == 0)
-                          {
-                            ucMotorState = 5;
-                            if (servoValue > 1)
-                            {
-                              servoValue = 0;
-                            }
-                            updateServo(servoValue);
-                            servoValue++;
-
-                          }
-                          break;
-                        }
-                    }
-                  }
-
-                  //End case 16
               }
 
             }
