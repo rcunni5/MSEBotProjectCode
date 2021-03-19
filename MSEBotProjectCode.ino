@@ -39,7 +39,7 @@
   30            VIN                               PWR 5V t 7V                                                                          PWR 5V to 7V
 */
 
-
+// I fucking hate math
 //Pin assignments
 const int ciHeartbeatLED = 2;
 const int ciPB1 = 27;
